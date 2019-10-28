@@ -9,15 +9,35 @@ mongoose.connect('mongodb://localhost/playground')
 // required: true is only relevant to mongoose and not mongodb.
 // Built in validators in mongoose:
 
+//custom synchronous validator
+// Live code is async implementation
+// tags: {
+//     type: Array,
+//         //custom validator -->
+//         validate: {
+//         validator: function(v) {
+//             return  v && v.length > 0;
+//         },
+//         message: 'A new course should have at lease one tag upon creation. Please try again.'
+//     }
+
+    //All Types have these modifiers:
+    //        - get: v => Math.round(v); this happens when getting the value
+    //        - set: v => Math.round  this happens when setting the  value
+    //        -
 const courseSchema = new mongoose.Schema({
+    // other schema types
     name: {
         type: String,
         required: true,
         minlength: 5,
-        maxlength: 200
+        maxlength: 200,
+        lowercase: true, //downcases string before it gets saved
+        // uppercase: true
+        trim: true //removes padding.
         // match: /pattern/
         // min,
-        // max
+        // max,
     },
     category: {
         type: String,
@@ -28,8 +48,13 @@ const courseSchema = new mongoose.Schema({
         type: Array,
         //custom validator -->
         validate: {
-            validator: function(v) {
-                return  v && v.length > 0;
+            isAsync: true,
+            validator: function(v, callback) {
+                setTimeout(() => {
+                    //do some work
+                    const result = v && v.length > 0;
+                    callback(result)
+                }, 4000);
             },
             message: 'A new course should have at lease one tag upon creation. Please try again.'
         },
@@ -50,7 +75,7 @@ async function createCourse() {
         category: 'web',
         name: faker.hacker.noun(),
         author: faker.name.firstName(),
-        tags: ['one'],
+        tags: [],
         //date is default
         isPublished: faker.random.boolean()
     });
@@ -59,9 +84,9 @@ async function createCourse() {
         console.log(result);
     }
     catch (ex) {
-        console.log(ex.message);
+        for (field in ex.errors)
+            console.log(ex.errors[field])
     }
-
 }
 // populate fake data for development -->
 // for(let i = 0; i < 100; i++){
