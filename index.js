@@ -6,12 +6,13 @@ mongoose.connect('mongodb://localhost/playground')
     .catch(err => console.error('Could not connect to mongodb: ', err));
 
 // string, number, date, buffer, boolean, objectID, Array
+// required: true is only relevant to mongoose and not mongodb.
 const courseSchema = new mongoose.Schema({
-    name: String,
-    author: String,
-    tags: [String],
+    name: {type: String, required: true},
+    author: {type: String, required: true},
+    tags: {type: [String], required: true},
     date: { type: Date, default: Date.now },
-    isPublished: Boolean
+    isPublished: {type:Boolean, required: true}
 });
 
 // A Class is a blueprint and an Object is an instance of that blueprint
@@ -27,12 +28,18 @@ async function createCourse() {
         //date is default
         isPublished: faker.random.boolean()
     });
-    const result = await courseOne.save();
-    console.log(result);
+    try{
+        const result = await courseOne.save();
+        console.log(result);
+    }
+    catch (ex) {
+        console.log(ex.message);
+    }
+
 }
 // populate fake data for development -->
 // for(let i = 0; i < 100; i++){
-//     createCourse();
+    createCourse();
 // }
 // How to retrieve documents from mongoDb database
 // To filter Course.find({author: 'William', isPublished: false})
@@ -103,7 +110,10 @@ async function updateCourseUpdateFirst(id){
     // optionally: get the updated document
     //www.docs.mongodb.com/manual/reference/operator/update/
     // findByIdAndUpdate will update and return the course object instead of meta data
-    // the second argument should be the object to update with
+    // the second argument should be the object to update with - original object will be returned
+    // If you want updated object to be returned then you need to pass in a third option:
+    // { new: true } --> returns updated object
+
     const  course = await Course.update(
         {_id: id}, //specify what to update like find()
         {$set: {
@@ -112,9 +122,22 @@ async function updateCourseUpdateFirst(id){
         });
     console.log(course)
 }
-updateCourseUpdateFirst('5db6f3f0f9e11eeaa0bb91ed');
+// updateCourseUpdateFirst('5db6f3f0f9e11eeaa0bb91ed');
 
 // updateCourseRetrieveFirst('5db6f316cb98ceea4d76d561');
+
+// How to remove a document from mongo
+async function removeCourse(id) {
+  // const result = await Course.deleteOne({_id: id});
+  const course = await Course.findByIdAndRemove(id);
+  console.log(course);
+  // console.log(result);
+}
+//use deleteMany if you want to delete multiples
+
+// removeCourse('5db6f3f0f9e11eeaa0bb91ed');
+
+
 
 // Errors in console -->
 // { useUnifiedTopology: true }
