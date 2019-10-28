@@ -7,10 +7,35 @@ mongoose.connect('mongodb://localhost/playground')
 
 // string, number, date, buffer, boolean, objectID, Array
 // required: true is only relevant to mongoose and not mongodb.
+// Built in validators in mongoose:
+
 const courseSchema = new mongoose.Schema({
-    name: {type: String, required: true},
+    name: {
+        type: String,
+        required: true,
+        minlength: 5,
+        maxlength: 200
+        // match: /pattern/
+        // min,
+        // max
+    },
+    category: {
+        type: String,
+        enum:  ['web', 'mobile', 'network']
+    },
     author: {type: String, required: true},
-    tags: {type: [String], required: true},
+    tags: {
+        type: Array,
+        //custom validator -->
+        validate: {
+            validator: function(v) {
+                return  v && v.length > 0;
+            },
+            message: 'A new course should have at lease one tag upon creation. Please try again.'
+        },
+        //conditionally make a property required -->
+        required: function() {return this.isPublished; }
+        },
     date: { type: Date, default: Date.now },
     isPublished: {type:Boolean, required: true}
 });
@@ -22,9 +47,10 @@ const Course = mongoose.model('Course', courseSchema);
 //Create object from created class. Lower case because its an object.
 async function createCourse() {
     const courseOne = new Course({
+        category: 'web',
         name: faker.hacker.noun(),
         author: faker.name.firstName(),
-        tags: [faker.random.word(), faker.random.word()],
+        tags: ['one'],
         //date is default
         isPublished: faker.random.boolean()
     });
